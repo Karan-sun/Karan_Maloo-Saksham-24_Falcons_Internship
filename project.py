@@ -71,7 +71,8 @@ def create_purpose_totals_df(purpose_totals):
     """
     Creates a pandas DataFrame from the purpose totals dictionary.
     """
-    purpose_totals_df = pd.DataFrame.from_dict(purpose_totals, orient="index", columns=["Total"])
+    data = {"Purpose": list(purpose_totals.keys()), "Total": list(purpose_totals.values())}
+    purpose_totals_df = pd.DataFrame(data)
     return purpose_totals_df
 
 

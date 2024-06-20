@@ -1,5 +1,5 @@
 import pandas as pd
-
+import openpyxl
 
 def get_user_input():
     """
@@ -57,14 +57,41 @@ def save_data_to_excel(data, purpose_totals_df, filename="mydata.xlsx"):
     """
     Saves data and purpose totals to separate sheets in an Excel file with error handling.
     """
-    writer = pd.ExcelWriter(filename, engine="xlsxwriter")
-    try:
-        data.to_excel(writer, sheet_name="Sheet1", index=False)
-        purpose_totals_df.to_excel(writer, sheet_name="Sheet2", index=False)
-        writer.close()
-        print("Data saved to Excel successfully!")
-    except PermissionError:
-        print("Error: Could not save data to", filename, ". Check file permissions or try a different location.")
+    def check_data(filename):
+        try:
+            file  = pd.read_excel(filename)
+            return not file.empty
+        except FileNotFoundError:
+            print("Error: File", filename, "not found.")
+            return False
+        except pd.errors.EmptyDataError:
+            print(filename, "is empty (no data found).")
+            return False
+    has_data= check_data(filename)
+    if has_data:
+        try:
+            workbook = openpyxl.load_workbook(filename=filename)  # Load existing workbook
+            writer = pd.ExcelWriter(workbook, engine='openpyxyl')  # Use openpyxl engine for writing
+
+            data.to_excel(writer, sheet_name="Sheet1", startrow=data.shape[0], index=False)  # Append to existing data
+            purpose_totals_df.to_excel(writer, sheet_name="Sheet2", startrow=purpose_totals_df.shape[0], index=False)  # Append to existing data
+
+            writer.save()  # Save the workbook
+            print("Data appended to Excel successfully!")
+        except FileNotFoundError:
+            print("Error: File", filename, "not found. Creating a new file.")
+            save_data_to_excel(data, purpose_totals_df, filename)  # Use original save function for new file
+        except PermissionError:
+            print("Error: Could not append data to", filename, ". Check file permissions or try a different location.")
+    else:
+        writer = pd.ExcelWriter(filename, engine="xlsxwriter")
+        try:
+            data.to_excel(writer, sheet_name="Sheet1", index=False)
+            purpose_totals_df.to_excel(writer, sheet_name="Sheet2", index=False)
+            writer.close()
+            print("Data saved to Excel successfully!")
+        except PermissionError:
+            print("Error: Could not save data to", filename, ". Check file permissions or try a different location.")
 
 
 def create_purpose_totals_df(purpose_totals):
